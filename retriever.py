@@ -1,36 +1,38 @@
-def get_recommendations(transport, diet, electricity, shopping_freq):
-    tips = []
+def estimate_footprint(transport, diet, electricity, shopping_freq):
+    score = 0.0
 
-    if transport in ["Car", "Electric Vehicle"]:
-        if transport == "Car":
-            tips.append("Reducing car use, even occasionally, can lower emissions significantly.")
-        else:
-            tips.append("Using an electric vehicle is great—try charging during off-peak hours or using solar.")
+    # Transport score (fuzzy weights)
+    transport_weights = {
+        "Car": 1.0,
+        "Electric Vehicle": 0.4,
+        "Public Transport": 0.5,
+        "Cycle/Walk": 0.1
+    }
+    score += 30 * transport_weights.get(transport, 0.6)
 
-    elif transport in ["Public Transport", "Cycle/Walk"]:
-        tips.append("Efficient transport choice! You're helping reduce traffic and pollution.")
+    # Diet score (fuzzy weights)
+    diet_weights = {
+        "Meat-heavy": 1.0,
+        "Mixed": 0.67,
+        "Vegetarian": 0.33,
+        "Vegan": 0.1
+    }
+    score += 30 * diet_weights.get(diet, 0.5)
 
-    if diet in ["Meat-heavy", "Mixed"]:
-        if diet == "Meat-heavy":
-            tips.append("Try reducing meat intake gradually—start with one meatless day per week.")
-        else:
-            tips.append("A mostly plant-based diet is great—keep balancing your meals.")
-
-    elif diet in ["Vegetarian", "Vegan"]:
-        tips.append("Excellent! Your food choices support lower emissions and water use.")
-
+    # Electricity score (linear fuzzy logic)
     if electricity > 600:
-        tips.append("High usage detected—consider a home energy audit or smart meters.")
-    elif 300 < electricity <= 600:
-        tips.append("Moderate electricity usage—optimize with efficient appliances and habits.")
+        score += 20
+    elif electricity > 300:
+        score += 10 + (10 * ((electricity - 300) / 300))  # smooth transition
     else:
-        tips.append("Nice! Low electricity use means a smaller carbon footprint.")
+        score += 5 + (5 * (electricity / 300))  # low usage still has gradation
 
-    if shopping_freq == "Every week":
-        tips.append("Weekly shopping can add up. Try buying only what you need or explore second-hand options.")
-    elif shopping_freq == "Monthly":
-        tips.append("Monthly shopping is better. Sustainable brands or thrift stores can further reduce impact.")
-    else:
-        tips.append("Minimal shopping habits are great for both the planet and your wallet!")
+    # Shopping score (fuzzy mapping)
+    shopping_weights = {
+        "Every week": 1.0,
+        "Monthly": 0.66,
+        "Rarely": 0.33
+    }
+    score += 15 * shopping_weights.get(shopping_freq, 0.2)
 
-    return tips
+    return round(score, 2)
